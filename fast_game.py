@@ -83,7 +83,7 @@ if __name__ == '__main__':
 			solveAcc += 1
 
 	print("")
-	sacc = solveAcc / 100.0
+	sacc = solveAcc
 	print(f"Levels solved: {sacc}%") 
 	print(" -- ")
 

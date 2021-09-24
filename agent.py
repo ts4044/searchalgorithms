@@ -108,11 +108,25 @@ class BFSAgent(Agent):
 
             # YOUR CODE HERE
 
+            # Get the from the top of the queue
+            current = queue.pop(0)
+            if current.getHash() not in visited:
+                visited.append(current.getHash())
 
+                if current.state.checkWin():
+                    return current.getActions()
 
+                children = current.getChildren()
+                for child in children:
+                    if child.getHash() not in visited:
 
-        return []                       #remove me
-        #return bestNode.getActions()   #uncomment me
+                        if child.state.checkWin():
+                            return child.getActions()
+
+                        queue.append(child)
+                bestNode = current
+
+        return bestNode.getActions()
 
 
 
