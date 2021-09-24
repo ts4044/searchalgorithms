@@ -110,6 +110,7 @@ class BFSAgent(Agent):
 
             # Get the from the top of the queue
             current = queue.pop(0)
+
             if current.getHash() not in visited:
                 visited.append(current.getHash())
 
@@ -136,19 +137,35 @@ class DFSAgent(Agent):
         intializeDeadlocks(state)
         iterations = 0
         bestNode = None
-        queue = [Node(state.clone(), None, None)]
+        stack = [Node(state.clone(), None, None)]
         visited = []
         
         #expand the tree until the iterations runs out or a solution sequence is found
-        while (iterations < maxIterations or maxIterations <= 0) and len(queue) > 0:
+        while (iterations < maxIterations or maxIterations <= 0) and len(stack) > 0:
             iterations += 1
 
             # YOUR CODE HERE
 
+            # Get the from the top of the stack
+            current = stack.pop()
 
+            if current.getHash() not in visited:
+                visited.append(current.getHash())
 
-        return []                       #remove me
-        #return bestNode.getActions()   #uncomment me
+                if current.state.checkWin():
+                    return current.getActions()
+
+                children = current.getChildren()
+                for child in children:
+                    if child.getHash() not in visited:
+
+                        if child.state.checkWin():
+                            return child.getActions()
+
+                        stack.append(child)
+                bestNode = current
+
+        return bestNode.getActions()
 
 
 
