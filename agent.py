@@ -139,7 +139,7 @@ class DFSAgent(Agent):
         bestNode = None
         stack = [Node(state.clone(), None, None)]
         visited = []
-        
+
         #expand the tree until the iterations runs out or a solution sequence is found
         while (iterations < maxIterations or maxIterations <= 0) and len(stack) > 0:
             iterations += 1
@@ -179,19 +179,31 @@ class AStarAgent(Agent):
 
         #initialize priority queue
         queue = PriorityQueue()
-        queue.put(Node(state.clone(), None, None))
-        visited = []
+        queue.put(Node(state.clone(), None, None))  # This is open
+        visited = []  # This is closed
 
         while (iterations < maxIterations or maxIterations <= 0) and queue.qsize() > 0:
             iterations += 1
+            current = queue.get(False)
 
-            ## YOUR CODE HERE ##
+            if current.getHash() not in visited:
+                visited.append(current.getHash())
 
+                if current.state.checkWin():
+                    return current.getActions()
 
+                children = current.getChildren()
+                for child in children:
+                    if child.getHash() not in visited:
 
+                        if child.state.checkWin():
+                            return child.getActions()
 
-        return []                       #remove me
-        #return bestNode.getActions()   #uncomment me
+                        queue.put(child)
+
+                bestNode = current
+
+        return bestNode.getActions()
 
 
 #####    ASSIGNMENT 2 AGENTS    #####
@@ -203,7 +215,7 @@ class HillClimberAgent(Agent):
         #setup
         intializeDeadlocks(state)
         iterations = 0
-        
+
         seqLen = 50            # maximum length of the sequences generated
         coinFlip = 0.5          # chance to mutate
 
@@ -215,14 +227,14 @@ class HillClimberAgent(Agent):
         #mutate the best sequence until the iterations runs out or a solution sequence is found
         while (iterations < maxIterations):
             iterations += 1
-            
+
             ## YOUR CODE HERE ##
 
 
 
 
         #return the best sequence found
-        return bestSeq  
+        return bestSeq
 
 
 
@@ -253,7 +265,7 @@ class GeneticAgent(Agent):
             iterations += 1
 
             #1. evaluate the population
-           
+
 
 
 
@@ -278,7 +290,7 @@ class GeneticAgent(Agent):
                 #4.1 select 2 parents sequences based on probabilities generated
                 par1 = []
                 par2 = []
-                
+
 
 
 
@@ -286,12 +298,12 @@ class GeneticAgent(Agent):
                 #4.2 make a child from the crossover of the two parent sequences
                 offspring = []
 
-                
+
 
 
 
                 #4.3 mutate the child's actions
-                
+
 
 
 
@@ -308,7 +320,7 @@ class GeneticAgent(Agent):
             #6. replace the old population with the new one
             population = list(new_pop)
 
-        #return the best found sequence 
+        #return the best found sequence
         return bestSeq
 
 
@@ -400,7 +412,7 @@ class MCTSAgent(Agent):
         #return solution of highest scoring descendent for best node
         #if this line was reached, that means the iterations timed out before a solution was found
         return self.bestActions(bestNode)
-        
+
 
     #returns the descendent with the best action sequence based
     def bestActions(self, node):
@@ -453,9 +465,9 @@ class MCTSAgent(Agent):
 
      #updates the score all the way up to the root node
     def backpropogation(self, node, score):
-        
+
         ## YOUR CODE HERE ##
 
         return
-        
+
 
