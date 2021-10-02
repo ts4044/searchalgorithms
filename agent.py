@@ -98,7 +98,8 @@ class BFSAgent(Agent):
     def getSolution(self, state, maxIterations=-1):
         intializeDeadlocks(state)
         iterations = 0
-        bestNode = None
+        # Initializing the best node to be the first node to avoid None Condition and an additional if in the loop
+        bestNode = Node(state.clone(), None, None)
         queue = [Node(state.clone(), None, None)]
         visited = []
 
@@ -106,27 +107,34 @@ class BFSAgent(Agent):
         while (iterations < maxIterations or maxIterations <= 0) and len(queue) > 0:
             iterations += 1
 
-            # YOUR CODE HERE
-
-            # Get the from the top of the queue
+            # Get the node from the front of the queue
             current = queue.pop(0)
 
+            # If the current node is not already visited, visit it
             if current.getHash() not in visited:
                 visited.append(current.getHash())
 
+                # Check if the current node is the win state
                 if current.state.checkWin():
+                    # If win, then return the actions to be taken to go to this state
                     return current.getActions()
 
+                # If it is not the win state, then add the children to the queue to visit them
                 children = current.getChildren()
                 for child in children:
+                    # Check if the child is already visited or not to avoid duplicates in the queue.
+                    # Even if there are duplicates in queue, it won't matter
+                    # But since we have limited iterations, we need this check
                     if child.getHash() not in visited:
-
-                        if child.state.checkWin():
-                            return child.getActions()
-
                         queue.append(child)
-                bestNode = current
 
+                # For the best node, compare the heuristics with current before changing.
+                # Even though this is an uninformed search the way bestNode is considered
+                # is taking the closest node to goal state
+                if current.getHeuristic() <= bestNode.getHeuristic():
+                    bestNode = current
+
+        # If no goal state was achieved, then return the closest node to the goal
         return bestNode.getActions()
 
 
@@ -136,7 +144,8 @@ class DFSAgent(Agent):
     def getSolution(self, state, maxIterations=-1):
         intializeDeadlocks(state)
         iterations = 0
-        bestNode = None
+        # Initializing the best node to be the first node to avoid None Condition and an additional if in the loop
+        bestNode = Node(state.clone(), None, None)
         stack = [Node(state.clone(), None, None)]
         visited = []
 
@@ -144,27 +153,37 @@ class DFSAgent(Agent):
         while (iterations < maxIterations or maxIterations <= 0) and len(stack) > 0:
             iterations += 1
 
-            # YOUR CODE HERE
-
-            # Get the from the top of the stack
+            # Get the node from the top of the stack
             current = stack.pop()
 
+            # If the current node is not already visited, visit it
             if current.getHash() not in visited:
                 visited.append(current.getHash())
 
+                # Check if the current node is the win state
                 if current.state.checkWin():
+                    # If win, then return the actions to be taken to go to this state
                     return current.getActions()
 
+                # If it is not the win state, then add the children to the stack to visit them
+                # The difference between BFS and DFS is usage of the stack.
+                # When we pop the stack, we are traversing down the tree cause we are visiting the node and its children
+                # first and then going to the sibling.
                 children = current.getChildren()
                 for child in children:
+                    # Check if the child is already visited or not to avoid duplicates in the stack.
+                    # Even if there are duplicates in stack, it won't matter
+                    # But since we have limited iterations, we need this check
                     if child.getHash() not in visited:
-
-                        if child.state.checkWin():
-                            return child.getActions()
-
                         stack.append(child)
-                bestNode = current
 
+                # For the best node, compare the heuristics with current before changing.
+                # Even though this is an uninformed search the way bestNode is considered
+                # is taking the closest node to goal state
+                if current.getHeuristic() <= bestNode.getHeuristic():
+                    bestNode = current
+
+        # If no goal state was achieved, then return the closest node to the goal
         return bestNode.getActions()
 
 
@@ -175,7 +194,8 @@ class AStarAgent(Agent):
         #setup
         intializeDeadlocks(state)
         iterations = 0
-        bestNode = None
+        # Initializing the best node to be the first node to avoid None Condition and an additional if in the loop
+        bestNode = Node(state.clone(), None, None)
 
         #initialize priority queue
         queue = PriorityQueue()
@@ -184,25 +204,33 @@ class AStarAgent(Agent):
 
         while (iterations < maxIterations or maxIterations <= 0) and queue.qsize() > 0:
             iterations += 1
+
+            # Deque and get the node with highest priority
             current = queue.get(False)
 
+            # If the node is not visited, then visit it
             if current.getHash() not in visited:
                 visited.append(current.getHash())
 
+                # Check if the current node is the win state
                 if current.state.checkWin():
+                    # If win, then return the actions to be taken to go to this state
                     return current.getActions()
 
+                # If it is not the goal state, get the children and add to priority queue
+                # Since we are using a priority queue, we don't need to check the heuristics everytime
+                # Since it is done internally. The PriorityQueue sorts the structure whenever a new element is inserted
+                # Such that, the top of the queue is always the node with lowest heuristic.
                 children = current.getChildren()
                 for child in children:
                     if child.getHash() not in visited:
-
-                        if child.state.checkWin():
-                            return child.getActions()
-
                         queue.put(child)
 
-                bestNode = current
+                # For the best node, compare the heuristics with current before changing.
+                if current.getHeuristic() <= bestNode.getHeuristic():
+                    bestNode = current
 
+        # We don't usually reach here since A* gets to the solution almost always
         return bestNode.getActions()
 
 
