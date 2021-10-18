@@ -37,6 +37,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='PyGame wrapper for Sokoban')
 	parser.add_argument('-a', '--agent', action='store', dest='agent', default='Random', help='Which agent algorithm to use (DoNothing, Random, BFS, DFS, AStar, HillClimber, Genetic, MCTS)')
 	parser.add_argument('-i', '--iterations', action='store', dest='maxIter', default=3000, type=int, help='Number of iterations for the agent to search a solution for')
+	parser.add_argument('-t', '--trials', action='store', dest='trials', default=1,type=int,help='Number of trials per level to test agent on (default=1)')
 
 	args = parser.parse_args()
 
@@ -71,20 +72,28 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit()
 
-	print(f" -- SOLVING 100 LEVELS WITH [ {args.agent} ] AGENT FOR [ {args.maxIter} ] ITERATIONS -- ")
+	print(f" -- SOLVING 100 LEVELS WITH [ {args.agent} ] AGENT USING [ {args.trials} ] TRIALS FOR [ {args.maxIter} ] ITERATIONS -- ")
 
+	#save trial individual accuracies
+	tacc = []
+	for t in range(args.trials):
+		tacc.append(0)
 
 	#evaluate all of the levels
-	solveAcc = 0
 	for levelNo in range(100):
-		result, win = ai_play(levelNo, solver, args.maxIter)
-		print(f"Level <{levelNo}>\t{result}")
-		if win == 1:
-			solveAcc += 1
+		print(f"Level <{levelNo}>", end=''),
+		for t in range(args.trials):
+			result, win = ai_play(levelNo, solver, args.maxIter)
+			print(f"\t{result}", end='')
+			if win == 1:
+				tacc[t]+=1
+		print("\n")
+				
 
 	print("")
-	sacc = solveAcc
-	print(f"Levels solved: {sacc}%") 
+	sacc = round(sum(tacc)/args.trials)
+	print(f"Levels solved (per trial): {tacc} x(%)") 
+	print(f"Levels solved (avg): {sacc}%") 
 	print(" -- ")
 
 

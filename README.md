@@ -16,6 +16,13 @@ Requires Python 3.8 to run
 
 `$ python3 game.py --agent AStar --no_render #run game with AStar agent without rendering`
 
+##### Solve with fast_game.py
+`$ python3 game.py --agent [AGENT-NAME-HERE]`
+
+`$ python3 fast_game.py --agent BFS #run all 100 levels with BFS agent`
+
+`$ python3 fast_game.py --agent HillClimber -trials 3 #run all 100 levels 3 times with HillClimber agent`
+
 ## Parameters
 `--play` - run the game as a human player
 
@@ -28,6 +35,8 @@ Requires Python 3.8 to run
 `--iterations [#]` - how many iterations to allow the agent to search for (default=3000)
 
 `--solve_speed [#]` - how fast (in ms) to show each step of the solution being executed on the game screen 
+
+`--trials [#]` - number of repeated trials to run the levels for _(used only in fast_game.py)_ (default=1)
 
 ## Agent Types
 
@@ -99,5 +108,23 @@ _These are the only functions you need to concern yourselves with to complete th
         | Hillclimber | ~75% |
         | Genetic | ~90% | 
         | MCTS | ~67% |
-
-
+* _How do I update and evaluate a state without using the Node class?_    
+    * ```
+        sequence = [directions[0],directions[3]]  #list of actions in the form {x: #, y: #}
+        mod_state = state.clone       #make a clone of the initial state to modify
+        
+        #update the state with the sequence of actions
+        for s in sequence:
+            mod_state.update(s[x],s[y])  
+            
+        h = getHeuristic(mod_state)   #save the resulting heuristic value from the updated state
+        w = mod_state.checkWin()      #check if sequence created a win state
+        ```
+* _What is `coinFlip`?_
+    * Use the value of `coinFlip` to determine whether a genome should mutate. For example:
+        ``` 
+        if random.random() < coinFlip: 
+            #mutate 
+        else: 
+            #do nothing
+        ```
