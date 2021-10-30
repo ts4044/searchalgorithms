@@ -251,17 +251,31 @@ class HillClimberAgent(Agent):
         bestSeq = []
         for i in range(seqLen):
             bestSeq.append(random.choice(directions))
+        bestSeqCopy = bestSeq.copy()
 
         #mutate the best sequence until the iterations runs out or a solution sequence is found
-        while (iterations < maxIterations):
+        while iterations < maxIterations:
             iterations += 1
 
             ## YOUR CODE HERE ##
+            newstate = state.clone()
 
+            for i in range(seqLen):
+                newstate.update(bestSeq[i]['x'], bestSeq[i]['y'])
 
+                if newstate.checkWin():
+                    return bestSeq
 
+            if getHeuristic(newstate) > getHeuristic(state):
+                bestSeq = bestSeqCopy.copy()
+            else:
+                bestSeqCopy = bestSeq.copy()
 
-        #return the best sequence found
+            for i in range(seqLen):
+                if random.random() < coinFlip:
+                    bestSeq[i] = random.choice(directions)
+
+        # return the best sequence found
         return bestSeq
 
 
@@ -288,67 +302,61 @@ class GeneticAgent(Agent):
                 bestSeq.append(random.choice(directions))
             population.append(bestSeq)
 
+        total = popSize * (popSize + 1) / 2     # sum of first n numbers = n * (n+1) / 2
+        weights = [i / total for i in reversed(range(1, popSize + 1))]
+
         #mutate until the iterations runs out or a solution sequence is found
         while (iterations < maxIterations):
             iterations += 1
 
-            #1. evaluate the population
+            # 1. evaluate the population
+            heuristic_list = []
+            for p in range(popSize):
+                test_state = state.clone()
+                for direction in population[p]:
+                    test_state.update(direction['x'], direction['y'])
 
+                    if test_state.checkWin():
+                        return population[p]
 
+                heuristic_list.append(getHeuristic(test_state))
 
+            # 2. sort the population by fitness (low to high)
+            evaluation_list = list(zip(heuristic_list, range(popSize)))
+            evaluation_list.sort()
 
-            #2. sort the population by fitness (low to high)
+            # 2.1 save bestSeq from best evaluated sequence
+            bestSeq = population[evaluation_list[0][1]]
 
+            # 3. generate probabilities for parent selection based on fitness
 
-
-
-            #2.1 save bestSeq from best evaluated sequence
-
-
-
-
-            #3. generate probabilities for parent selection based on fitness
-
-
-
-
-            #4. populate by crossover and mutation
+            # 4. populate by crossover and mutation
             new_pop = []
-            for i in range(int(popSize/2)):
-                #4.1 select 2 parents sequences based on probabilities generated
-                par1 = []
-                par2 = []
+            for i in range(int(popSize / 2)):
+                selected_parents = random.choices(population=evaluation_list, weights=weights, k=2)
 
+                # 4.1 select 2 parents sequences based on probabilities generated
+                par1 = population[selected_parents[0][1]]
+                par2 = population[selected_parents[1][1]]
 
+                # 4.2 make a child from the crossover of the two parent sequences
+                offspring = [par1[i] if random.random() < parentRand else par2[i] for i in range(seqLen)]
 
+                # 4.3 mutate the child's actions
+                offspring = [random.choice(directions) if random.random() < mutRand else offspring[i] for i in
+                             range(seqLen)]
 
-
-                #4.2 make a child from the crossover of the two parent sequences
-                offspring = []
-
-
-
-
-
-                #4.3 mutate the child's actions
-
-
-
-
-
-                #4.4 add the child to the new population
+                # 4.4 add the child to the new population
                 new_pop.append(list(offspring))
 
+            # 5. add top half from last population (mu + lambda)
+            for i in range(int(popSize / 2)):
+                new_pop.append(population[evaluation_list[i][1]])
 
-            #5. add top half from last population (mu + lambda)
-            for i in range(int(popSize/2)):
-                break           #remove me
-
-
-            #6. replace the old population with the new one
+            # 6. replace the old population with the new one
             population = list(new_pop)
 
-        #return the best found sequence
+        # return the best found sequence
         return bestSeq
 
 
