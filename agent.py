@@ -251,31 +251,44 @@ class HillClimberAgent(Agent):
         bestSeq = []
         for i in range(seqLen):
             bestSeq.append(random.choice(directions))
-        bestSeqCopy = bestSeq.copy()
+
+        # Stores the copy of best sequence in case we hit a worse sequence after mutating
+        best_seq_copy = bestSeq.copy()
+        new_state = None
 
         #mutate the best sequence until the iterations runs out or a solution sequence is found
         while iterations < maxIterations:
             iterations += 1
 
             ## YOUR CODE HERE ##
-            newstate = state.clone()
+            # This stores the previous state that we have moved to - corresponds to the best_seq_copy
+            prev_state = new_state if new_state is not None else state.clone()
 
+            # Clone the initial state
+            new_state = state.clone()
+
+            # Perform the actions using the sequence generated
             for i in range(seqLen):
-                newstate.update(bestSeq[i]['x'], bestSeq[i]['y'])
-
-                if newstate.checkWin():
+                new_state.update(bestSeq[i]['x'], bestSeq[i]['y'])
+                # If we have reached a win state, return the sequence
+                if new_state.checkWin():
                     return bestSeq
 
-            if getHeuristic(newstate) > getHeuristic(state):
-                bestSeq = bestSeqCopy.copy()
+            # Check if the heuristic of new state is better than heuristic of previous state
+            # The lower the heuristic value, the better the chances of reaching goal state
+            # If the new state heuristic is greater, we replace the bestSeq with previous execution
+            if getHeuristic(new_state) > getHeuristic(prev_state):
+                bestSeq = best_seq_copy.copy()
+            # Else, we copy the new sequence and mutate it for further execution
             else:
-                bestSeqCopy = bestSeq.copy()
+                best_seq_copy = bestSeq.copy()
 
+            # Mutate the states based on the coin toss probability to find new neighbour
             for i in range(seqLen):
                 if random.random() < coinFlip:
                     bestSeq[i] = random.choice(directions)
 
-        # return the best sequence found
+        # return the best sequence found if no solution is reached
         return bestSeq
 
 
@@ -302,6 +315,8 @@ class GeneticAgent(Agent):
                 bestSeq.append(random.choice(directions))
             population.append(bestSeq)
 
+        # Since these values remain constant as our population size is constant
+        # executing them only once outside the loop
         total = popSize * (popSize + 1) / 2     # sum of first n numbers = n * (n+1) / 2
         weights = [i / total for i in reversed(range(1, popSize + 1))]
 
@@ -329,10 +344,12 @@ class GeneticAgent(Agent):
             bestSeq = population[evaluation_list[0][1]]
 
             # 3. generate probabilities for parent selection based on fitness
+            # I have used the weighted random choice, hence skipping this step
 
             # 4. populate by crossover and mutation
             new_pop = []
             for i in range(int(popSize / 2)):
+                # This does a roulette wheel selection internally
                 selected_parents = random.choices(population=evaluation_list, weights=weights, k=2)
 
                 # 4.1 select 2 parents sequences based on probabilities generated
@@ -471,15 +488,20 @@ class MCTSAgent(Agent):
         visited = []
 
         ## YOUR CODE HERE ##
+        # Do while curNode is not a terminal state
         while curNode.checkWin() is False:
+            # Expand the tree or get all the children
             children = curNode.getChildren(visited)
+            # If there are no children, we cannot run the bestChildUCT, so return to do a rollout
             if len(children) == 0:
                 break
 
+            # Select the first child that has not been visited yet
             for child in children:
                 if child.n == 0:
                     return child
 
+            # If all the children are visited, then we need to find the child with best UCT value, and expand explore it
             curNode = self.bestChildUCT(curNode)
 
         return curNode
@@ -492,20 +514,25 @@ class MCTSAgent(Agent):
         bestChild = None
 
         ## YOUR CODE HERE ##
+        # This stores a tuple - (uct value, child). We sort this list to get the child with maximum UCT value
         child_values = []
         children = node.getChildren([])
 
+        # Since numerator is a constant - uses the parent node, initializing it outside
         numerator = 2 * math.log(node.n)
 
         if len(children) != 0:
             for child in children:
+                # If a child has not been visited yet, skip it - else divide by 0 error
                 if child.n == 0:
                     continue
                 else:
+                    # Calculate the UCT value using the formula
                     score = (child.q / child.n) + (c * math.sqrt(numerator / child.n))
                     child_values.append((score, child))
-
+            # Sort by the UCT value
             child_values.sort()
+            # Return the bestChild
             bestChild = child_values[-1][1]
 
         return bestChild
@@ -517,15 +544,22 @@ class MCTSAgent(Agent):
         numRolls = 7        #number of times to rollout to
 
         ## YOUR CODE HERE ##
+        # If it is a terminal state, return
         if node.state.checkWin():
             return node.calcEvalScore(node.state)
 
+        # Clone the state to do the random actions
         state_clone = node.state.clone()
+
+        # Perform random action numRolls number of times
         for i in range(numRolls):
             random_action = random.choice(directions)
             state_clone.update(random_action['x'], random_action['y'])
+
+            # If we have reached the terminal state, break - our EvalScore will be high
             if state_clone.checkWin():
                 break
+
         return node.calcEvalScore(state_clone)
 
 
@@ -534,6 +568,7 @@ class MCTSAgent(Agent):
     def backpropogation(self, node, score):
 
         ## YOUR CODE HERE ##
+        # Update the N, Q values till we reach the root
         while node is not None:
             node.n += 1
             node.q += score
