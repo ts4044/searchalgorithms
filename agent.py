@@ -471,6 +471,16 @@ class MCTSAgent(Agent):
         visited = []
 
         ## YOUR CODE HERE ##
+        while curNode.checkWin() is False:
+            children = curNode.getChildren(visited)
+            if len(children) == 0:
+                break
+
+            for child in children:
+                if child.n == 0:
+                    return child
+
+            curNode = self.bestChildUCT(curNode)
 
         return curNode
 
@@ -482,8 +492,21 @@ class MCTSAgent(Agent):
         bestChild = None
 
         ## YOUR CODE HERE ##
+        child_values = []
+        children = node.getChildren([])
 
+        numerator = 2 * math.log(node.n)
 
+        if len(children) != 0:
+            for child in children:
+                if child.n == 0:
+                    continue
+                else:
+                    score = (child.q / child.n) + (c * math.sqrt(numerator / child.n))
+                    child_values.append((score, child))
+
+            child_values.sort()
+            bestChild = child_values[-1][1]
 
         return bestChild
 
@@ -494,8 +517,16 @@ class MCTSAgent(Agent):
         numRolls = 7        #number of times to rollout to
 
         ## YOUR CODE HERE ##
+        if node.state.checkWin():
+            return node.calcEvalScore(node.state)
 
-        return 0
+        state_clone = node.state.clone()
+        for i in range(numRolls):
+            random_action = random.choice(directions)
+            state_clone.update(random_action['x'], random_action['y'])
+            if state_clone.checkWin():
+                break
+        return node.calcEvalScore(state_clone)
 
 
 
@@ -503,6 +534,10 @@ class MCTSAgent(Agent):
     def backpropogation(self, node, score):
 
         ## YOUR CODE HERE ##
+        while node is not None:
+            node.n += 1
+            node.q = node.q + score
+            node = node.parent
 
         return
 
