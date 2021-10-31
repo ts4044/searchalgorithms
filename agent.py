@@ -536,7 +536,7 @@ class MCTSAgent(Agent):
         ## YOUR CODE HERE ##
         while node is not None:
             node.n += 1
-            node.q = node.q + score
+            node.q += score
             node = node.parent
 
         return
